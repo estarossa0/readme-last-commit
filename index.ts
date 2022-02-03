@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/rest';
 import { readFile, writeFile } from 'fs/promises';
+import { exec } from '@actions/exec';
 
 type CommitInfoData = {
   message: string;
@@ -131,6 +132,27 @@ const updateReadmeFile = async (line: string): Promise<boolean> => {
   return true;
 };
 
+/**
+ * Commit the file updates, and push them
+ * @param data: object with data about the commit
+ */
+const commitAndPush = async (data: CommitInfoData) => {
+  await exec('git', [
+    'config',
+    '--global',
+    'user.email',
+    '41898282+github-actions[bot]@users.noreply.github.com>',
+  ]);
+  await exec('git', ['config', '--global', 'user.name', 'last-commit-bot']);
+  await exec('git', ['add', 'README.md']);
+  await exec('git', [
+    'commit',
+    '-m',
+    `update last commit\n\nthe new commit is ${data.repo}@${data.sha}`,
+  ]);
+  await exec('git', ['push']);
+};
+
 async function run() {
   const username = core.getInput('GH_USERNAME');
 
@@ -146,5 +168,9 @@ async function run() {
   core.notice(`Found commit in ${data.repo}`);
 
   const updated = await updateReadmeFile(newLine);
+
+  if (!updated) return;
+
+  commitAndPush(data);
 }
 run();
