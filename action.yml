@@ -2,6 +2,12 @@ name: 'Readme last commit'
 
 description: 'Update last commit in github profile readme'
 
+inputs:
+  GH_USERNAME:
+    description: 'Your GitHub username'
+    default: ${{ github.repository_owner }}
+    required: false
+
 runs:
   using: node16
   main: dist/index.js
