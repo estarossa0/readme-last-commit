@@ -8174,13 +8174,48 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(3411));
 const rest_1 = __nccwpck_require__(6822);
-async function run() {
+const getCommitInfo = async (username) => {
     const github = new rest_1.Octokit({});
-    const username = core.getInput('GH_USERNAME');
-    console.log(username);
+    core.notice(`Fetching ${username} public events`);
     const data = await github.activity
-        .listPublicEventsForUser({ username: username, per_page: 5 })
-        .then(({ data }) => data);
+        .listPublicEventsForUser({ username: username, per_page: 100 })
+        .then(({ data }) => data)
+        .catch(({ response }) => {
+        if (response?.status === 404)
+            core.setFailed('User not found');
+        else
+            core.setFailed(`Failed with ${response?.status ? response?.status : 'undefined error'}`);
+        return null;
+    });
+    if (!data)
+        return { error: { type: 500 } };
+    const pushEvent = data.find((event) => {
+        if (event.type === 'PushEvent')
+            return true;
+        return false;
+    });
+    if (!pushEvent) {
+        core.setFailed('Could not find any recent commits');
+        return { error: { type: 404 } };
+    }
+    const payload = pushEvent.payload;
+    return {
+        data: {
+            message: payload.commits[0].message,
+            repo: pushEvent.repo.name,
+            sha: payload.commits[0].sha,
+        },
+    };
+};
+async function run() {
+    const username = core.getInput('GH_USERNAME');
+    if (!username) {
+        core.setFailed('Username could not be found');
+        return;
+    }
+    const { data, error } = await getCommitInfo(username);
+    if (error)
+        return;
     console.log(data);
 }
 run();
