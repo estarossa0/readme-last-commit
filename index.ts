@@ -34,7 +34,12 @@ const getCommitInfo = async (username: string): Promise<CommitInfo> => {
   if (!data) return { error: { type: 500 } };
 
   const pushEvent = data.find((event) => {
-    if (event.type === 'PushEvent') return true;
+    if (event.type === 'PushEvent') {
+      const payload = event.payload as any;
+      if (!payload.commits || payload.commits.length === 0) return false;
+
+      return true;
+    }
     return false;
   });
 
