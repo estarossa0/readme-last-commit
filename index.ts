@@ -1,17 +1,24 @@
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/rest';
 
+type CommitInfoData = {
+  message: string;
+  repo: string;
+  sha: string;
+};
+
 interface CommitInfo {
-  data?: {
-    message: string;
-    repo: string;
-    sha: string;
-  };
+  data?: CommitInfoData;
   error?: {
     type: 404 | 500;
   };
 }
 
+/**
+ * Fetch the user events, look for the `pushEvent` type and return
+ * object with information about the commit
+ * @param username: the github user username
+ */
 const getCommitInfo = async (username: string): Promise<CommitInfo> => {
   const github = new Octokit({});
 
@@ -58,6 +65,19 @@ const getCommitInfo = async (username: string): Promise<CommitInfo> => {
   };
 };
 
+/**
+ * create the line that will be added in README and return it as string
+ * @param data: object with data about the commit
+ */
+const assembleTheNewLine = (data: CommitInfoData): string => {
+  const truncMessage =
+    data.message.length > 50
+      ? data.message.slice(0, 45).concat('...')
+      : data.message;
+
+  return `${truncMessage} ${data.repo}@${data.sha}`;
+};
+
 async function run() {
   const username = core.getInput('GH_USERNAME');
 
@@ -67,8 +87,8 @@ async function run() {
   }
 
   const { data, error } = await getCommitInfo(username);
-  if (error) return;
+  if (error || !data) return;
 
-  console.log(data);
+  const newLine = assembleTheNewLine(data);
 }
 run();
