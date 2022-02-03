@@ -1,0 +1,16 @@
+name: 'Readme last commit'
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: run javascript code
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: npm ci
+      - run: npm start

@@ -1,0 +1,17 @@
+{
+  "name": "readme-last-commit",
+  "version": "1.0.0",
+  "description": "readme-last-commit",
+  "scripts": {
+    "start": "ts-node index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/estarossa0/readme-last-commit.git"
+  },
+  "author": "estarossa0",
+  "license": "MIT",
+  "devDependencies": {
+    "ts-node": "^10.4.0"
+  }
+}
