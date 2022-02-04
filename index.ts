@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import { Octokit } from '@octokit/rest';
 import { readFile, writeFile } from 'fs/promises';
 import { exec } from '@actions/exec';
+import axios from 'axios';
 
 type CommitInfoData = {
   message: string;
@@ -73,6 +74,20 @@ const getCommitInfo = async (username: string): Promise<CommitInfo> => {
  */
 const assembleGithubUrl = (data: CommitInfoData): string => {
   return `https://github.com/${data.repo}/commit/${data.sha}`;
+};
+
+/**
+ * Fetch the commit social preview from opengraph api
+ * @param url: commit url in github
+ */
+const fetchImageFromUrl = async (url: string): Promise<string | null> => {
+  const response = await axios(`https://opengraph.lewagon.com/?url=${url}`);
+
+  if (response.status !== 200) {
+    core.setFailed('Failed to fetch image');
+    return null;
+  }
+  return response.data.data.image;
 };
 
 /**
@@ -161,6 +176,10 @@ async function run() {
 
   const commitUrl = assembleGithubUrl(data);
   core.notice(`Found commit in ${data.repo}`);
+
+  core.notice(`Fetching social preview image`);
+  const imageUrl = await fetchImageFromUrl(commitUrl);
+  if (!imageUrl) return;
 
   const updated = await updateReadmeFile(commitUrl);
 
