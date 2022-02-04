@@ -68,16 +68,11 @@ const getCommitInfo = async (username: string): Promise<CommitInfo> => {
 };
 
 /**
- * create the line that will be added in README and return it as string
+ * create the commit github url that will be used to get social preview and return it as string
  * @param data: object with data about the commit
  */
-const assembleTheNewLine = (data: CommitInfoData): string => {
-  const truncMessage =
-    data.message.length > 50
-      ? data.message.slice(0, 45).concat('...')
-      : data.message;
-
-  return `${truncMessage} ${data.repo}@${data.sha}`;
+const assembleGithubUrl = (data: CommitInfoData): string => {
+  return `https://github.com/${data.repo}/commit/${data.sha}`;
 };
 
 /**
@@ -164,10 +159,10 @@ async function run() {
   const { data, error } = await getCommitInfo(username);
   if (error || !data) return;
 
-  const newLine = assembleTheNewLine(data);
+  const commitUrl = assembleGithubUrl(data);
   core.notice(`Found commit in ${data.repo}`);
 
-  const updated = await updateReadmeFile(newLine);
+  const updated = await updateReadmeFile(commitUrl);
 
   if (!updated) return;
 
