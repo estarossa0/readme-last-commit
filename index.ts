@@ -90,6 +90,10 @@ const fetchImageFromUrl = async (url: string): Promise<string | null> => {
   return response.data.data.image;
 };
 
+const createImageMarkdown = (imageUrl: string, commitUrl: string): string => {
+  return `${'\n'}[<img width="380px" height="200px" src="${imageUrl}" />][commitUrl]${'\n\n'}[commitUrl]: ${commitUrl}`;
+};
+
 /**
  * open and parse the README file, then replace the commit line with latest one
  * @param line: the new commit line
@@ -181,7 +185,9 @@ async function run() {
   const imageUrl = await fetchImageFromUrl(commitUrl);
   if (!imageUrl) return;
 
-  const updated = await updateReadmeFile(commitUrl);
+  const markdown = createImageMarkdown(imageUrl, commitUrl);
+
+  const updated = await updateReadmeFile(markdown);
 
   if (!updated) return;
 
